@@ -1,10 +1,9 @@
 [project]
-name = "MonadBox"
+name = "RustyMonad"
 version = "0.0.1"
-authors = [
-  { name="AkiSun" },
-]
-description = "Monads for python"
+authors = ["AkiSun"]
+description = "Rust-style Monad utils for Python"
+repository = "https://github.com/AkiSun/rustymonad"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -14,5 +13,5 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/AkiSun/monadbox"
-Issues = "https://github.com/AkiSun/monadbox/issues"
+Homepage = "https://github.com/AkiSun/rustymonad"
+Issues = "https://github.com/AkiSun/rustymonad/issues"
