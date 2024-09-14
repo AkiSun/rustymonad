@@ -1,13 +1,17 @@
 [project]
 name = "RustyMonad"
 version = "0.0.1"
-authors = ["AkiSun"]
+authors = [
+    { name="AkiSun" }
+]
 description = "Rust-style Monad utils for Python"
-repository = "https://github.com/AkiSun/rustymonad"
 readme = "README.md"
 requires-python = ">=3.8"
+license = { text = "MIT License" }
+keywords = ["monad", "functional"]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.8",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]

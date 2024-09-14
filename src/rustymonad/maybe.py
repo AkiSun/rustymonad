@@ -6,11 +6,9 @@ from .monad import Monad
 
 T = TypeVar('T')
 U = TypeVar('U')
-E = TypeVar('E')
-F = TypeVar('F')
 
 
-class Result(Monad[T | E], ABC):
+class Maybe(Monad[T], ABC):
     @abstractmethod
     def expect(self, msg: str) -> T:
         raise NotImplementedError
@@ -24,11 +22,11 @@ class Result(Monad[T | E], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
+    def and_then(self, fn: Callable[[T], Maybe[U]]) -> Maybe[U]:
         raise NotImplementedError
 
     @abstractmethod
-    def or_else(self, fn: Callable[[E], Result[U, E]]) -> Result[U, E]:
+    def or_else(self, fn: Callable[[], Maybe[U]]) -> Maybe[U]:
         raise NotImplementedError
 
     @abstractmethod
@@ -40,11 +38,11 @@ class Result(Monad[T | E], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def is_ok(self) -> bool:
+    def is_just(self) -> bool:
         raise NotImplementedError
 
     @abstractmethod
-    def is_err(self) -> bool:
+    def is_nothing(self) -> bool:
         raise NotImplementedError
 
     @abstractmethod
@@ -64,27 +62,15 @@ class Result(Monad[T | E], ABC):
         raise NotImplementedError
 
     @staticmethod
-    def ok(value: T) -> Ok[T]:
-        return Ok(value)
+    def just(value: T) -> Just[T]:
+        return Just(value)
 
     @staticmethod
-    def err(value: E) -> Err[E]:
-        return Err(value)
-    
-    @staticmethod
-    def try_catch(fn: Callable[[T], U]) -> Callable[[T], Result[U, str]]:
-        def _wrapper(*args, **kwargs):
-            try:
-                return Ok(fn(*args, **kwargs))
-            except Exception as e:
-                return Err(str(e))
-        return _wrapper
+    def nothing() -> NothingType:
+        return Nothing
 
 
-class Ok(Result[T, Any]):
-    def __init__(self, value: T) -> None:
-        super().__init__(value)
-
+class Just(Maybe[T]):
     def expect(self, msg: str) -> T:
         return self._value
 
@@ -94,29 +80,32 @@ class Ok(Result[T, Any]):
     def unwrap_or(self, default: T) -> T:
         return self._value
 
-    def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
-        return fn(self._value)
+    def and_then(self, fn: Callable[[T], Maybe[U]]) -> Maybe[U]:
+        if isinstance(value := fn(self._value), Maybe):
+            return value
+        else:
+            return Just(value)
 
-    def or_else(self, fn: Callable[[E], Result[U, E]]) -> Result[Any, E]:
+    def or_else(self, fn: Callable[[], Maybe[U]]) -> Maybe[Any]:
         return self
 
     def map(self, fn: Callable[[T], U]) -> Monad[U]:
-        return Ok(fn(self._value))
+        return Just(fn(self._value))
 
     def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         return fn(self._value)
 
-    def is_ok(self) -> bool:
+    def is_just(self) -> bool:
         return True
 
-    def is_err(self) -> bool:
+    def is_nothing(self) -> bool:
         return False
 
     def __bool__(self) -> bool:
         return True
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Ok):
+        if isinstance(other, Just):
             return self._value == other._value
         return False
 
@@ -124,53 +113,50 @@ class Ok(Result[T, Any]):
         return fn(self._value)
 
     def __repr__(self) -> str:
-        return f'Result::Ok({self._value!r})'
+        return f'Maybe::Just({self._value.__repr__()})'
 
 
-class Err(Result[Any, E]):
-    def __init__(self, value: E) -> None:
-        super().__init__(value)
-
+class NothingType(Maybe[T]):
     def expect(self, msg: str):
-        raise Exception(f'{msg}: {self._value}')
+        raise Exception(msg)
 
     def unwrap(self):
-        if isinstance(self._value, Exception):
-            raise self._value
-        else:
-            raise Exception(self._value)
+        raise Exception('Nothing')
 
     def unwrap_or(self, default: T) -> T:
         return default
 
-    def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
+    def and_then(self, fn: Callable[[T], Maybe[U]]) -> Maybe[Any]:
         return self
 
-    def or_else(self, fn: Callable[[E], Result[U, E]]) -> Result[U, E]:
-        return fn(self._value)
+    def or_else(self, fn: Callable[[], Maybe[U]]) -> Maybe[U]:
+        return fn()
 
     def map(self, fn: Callable[[T], U]) -> Monad[Any]:
         return self
 
     def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         return self
-
-    def is_ok(self) -> bool:
+    
+    def is_just(self) -> bool:
         return False
 
-    def is_err(self) -> bool:
+    def is_nothing(self) -> bool:
         return True
-
+    
     def __bool__(self) -> bool:
         return False
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Err):
-            return self._value == other._value
+        if isinstance(other, NothingType):
+            return True
         return False
 
     def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         return self
 
     def __repr__(self) -> str:
-        return f'Result::Err({self._value!r})'
+        return 'Maybe::Nothing'
+
+
+Nothing: NothingType = NothingType(None)

@@ -1,4 +1,5 @@
-from typing import Generic, TypeVar, Callable
+from __future__ import annotations
+from typing import TypeVar, Generic, Callable
 
 
 T = TypeVar('T')
@@ -8,16 +9,16 @@ U = TypeVar('U')
 class Monad(Generic[T]):
     __match_args__ = ('_value',)
 
-    def __init__(self, value: T):
+    def __init__(self, value: T) -> None:
         self._value = value
 
     def unwrap(self) -> T:
         return self._value
 
-    def map[U](self, fn: Callable[[T], U]) -> 'Monad[U]':
+    def map(self, fn: Callable[[T], U]) -> Monad[U]:
         return Monad(fn(self._value))
 
-    def flatmap[U](self, fn: Callable[[T], 'Monad[U]']) -> 'Monad[U]':
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         return fn(self._value)
 
     def __bool__(self) -> bool:
@@ -28,5 +29,8 @@ class Monad(Generic[T]):
             return self._value == other._value
         return False
 
+    def __rshift__(self, fn: Callable[[T], Monad[U]]):
+        return fn(self._value)
+
     def __repr__(self) -> str:
-        return f'Monad({self._value.__repr__()})'
+        return f'Monad({self._value!r})'
