@@ -32,7 +32,7 @@ def do_notation(func: Callable[P, DoRet[M]]) -> Callable[P, M]:
     return _wrapper
 
 
-def try_notation(func: Callable[..., T]) -> Callable[..., Result[T, str]]:
+def try_notation(func: Callable[P, T]) -> Callable[P, Result[T, str]]:
     @wraps(func)
     def _wrapper(*args, **kwargs) -> Result[T, str]:
         try:
