@@ -10,7 +10,7 @@ U = TypeVar('U')
 E = TypeVar('E')
 
 
-class Maybe(Monad[T], ABC):
+class Option(Monad[T], ABC):
     @abstractmethod
     def expect(self, msg: str) -> T:
         raise NotImplementedError
@@ -24,19 +24,19 @@ class Maybe(Monad[T], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def and_then(self, fn: Callable[[T], Maybe[U]]) -> Maybe[U]:
+    def and_then(self, fn: Callable[[T], Option[U]]) -> Option[U]:
         raise NotImplementedError
 
     @abstractmethod
-    def or_else(self, fn: Callable[[], Maybe[U]]) -> Maybe[U]:
+    def or_else(self, fn: Callable[[], Option[U]]) -> Option[U]:
         raise NotImplementedError
     
     @abstractmethod
-    def inspect(self, fn: Callable[[T], None]) -> Maybe[T]:
+    def inspect(self, fn: Callable[[T], None]) -> Option[T]:
         raise NotImplementedError
     
     @abstractmethod
-    def is_just_and(self, fn: Callable[[T], bool]) -> bool:
+    def is_some_and(self, fn: Callable[[T], bool]) -> bool:
         raise NotImplementedError
     
     @abstractmethod
@@ -44,7 +44,7 @@ class Maybe(Monad[T], ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def filter(self, fn: Callable[[T], bool]) -> Maybe[T]:
+    def filter(self, fn: Callable[[T], bool]) -> Option[T]:
         raise NotImplementedError
 
     @abstractmethod
@@ -56,7 +56,7 @@ class Maybe(Monad[T], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def is_just(self) -> bool:
+    def is_some(self) -> bool:
         raise NotImplementedError
 
     @abstractmethod
@@ -80,7 +80,7 @@ class Maybe(Monad[T], ABC):
         raise NotImplementedError
 
 
-class Just(Maybe[T]):
+class Some(Option[T]):
     def expect(self, msg: str) -> T:
         return self._value
 
@@ -90,37 +90,37 @@ class Just(Maybe[T]):
     def unwrap_or(self, default: T) -> T:
         return self._value
 
-    def and_then(self, fn: Callable[[T], Maybe[U]]) -> Maybe[U]:
-        if isinstance(value := fn(self._value), Maybe):
+    def and_then(self, fn: Callable[[T], Option[U]]) -> Option[U]:
+        if isinstance(value := fn(self._value), Option):
             return value
         else:
-            return Just(value)
+            return Some(value)
 
-    def or_else(self, fn: Callable[[], Maybe[U]]) -> Maybe[Any]:
+    def or_else(self, fn: Callable[[], Option[U]]) -> Option[Any]:
         return self
 
-    def inspect(self, fn: Callable[[T], None]) -> Maybe[T]:
+    def inspect(self, fn: Callable[[T], None]) -> Option[T]:
         fn(self._value)
         return self
     
-    def is_just_and(self, fn: Callable[[T], bool]) -> bool:
+    def is_some_and(self, fn: Callable[[T], bool]) -> bool:
         return fn(self._value)
     
     def ok_or(self, err: E) -> Result[T, E]:
         return Ok(self._value)
     
-    def filter(self, fn: Callable[[T], bool]) -> Maybe[T]:
+    def filter(self, fn: Callable[[T], bool]) -> Option[T]:
         if fn(self._value):
             return self
         return Nothing()
 
     def map(self, fn: Callable[[T], U]) -> Monad[U]:
-        return Just(fn(self._value))
+        return Some(fn(self._value))
 
     def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         return fn(self._value)
 
-    def is_just(self) -> bool:
+    def is_some(self) -> bool:
         return True
 
     def is_nothing(self) -> bool:
@@ -130,7 +130,7 @@ class Just(Maybe[T]):
         return True
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Just):
+        if isinstance(other, Some):
             return self._value == other._value
         return False
 
@@ -138,10 +138,10 @@ class Just(Maybe[T]):
         return fn(self._value)
 
     def __repr__(self) -> str:
-        return f'Maybe::Just({self._value!r})'
+        return f'Option::Some({self._value!r})'
 
 
-class Nothing(Maybe[Any]):
+class Nothing(Option[Any]):
     __instance: Nothing | None = None
 
     def __new__(cls) -> Nothing:
@@ -156,27 +156,27 @@ class Nothing(Maybe[Any]):
         raise Exception(msg)
 
     def unwrap(self):
-        raise Exception('called `Maybe::unwrap()` on a `Nothing` value')
+        raise Exception('called `Option::unwrap()` on a `Nothing` value')
 
     def unwrap_or(self, default: T) -> T:
         return default
 
-    def and_then(self, fn: Callable[[Any], Maybe[U]]) -> Maybe[Any]:
+    def and_then(self, fn: Callable[[Any], Option[U]]) -> Option[Any]:
         return self
 
-    def or_else(self, fn: Callable[[], Maybe[U]]) -> Maybe[U]:
+    def or_else(self, fn: Callable[[], Option[U]]) -> Option[U]:
         return fn()
     
-    def inspect(self, fn: Callable[[T], None]) -> Maybe[T]:
+    def inspect(self, fn: Callable[[T], None]) -> Option[T]:
         return self
     
-    def is_just_and(self, fn: Callable[[T], bool]) -> bool:
+    def is_some_and(self, fn: Callable[[T], bool]) -> bool:
         return False
     
     def ok_or(self, err: E) -> Result[T, E]:
         return Err(err)
 
-    def filter(self, fn: Callable[[T], bool]) -> Maybe[T]:
+    def filter(self, fn: Callable[[T], bool]) -> Option[T]:
         return self
 
     def map(self, fn: Callable[[T], U]) -> Monad[Any]:
@@ -185,7 +185,7 @@ class Nothing(Maybe[Any]):
     def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         return self
     
-    def is_just(self) -> bool:
+    def is_some(self) -> bool:
         return False
 
     def is_nothing(self) -> bool:
@@ -203,6 +203,6 @@ class Nothing(Maybe[Any]):
         return self
 
     def __repr__(self) -> str:
-        return 'Maybe::Nothing'
+        return 'Option::Nothing'
 
 Nothing()

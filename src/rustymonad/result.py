@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TypeVar, Callable, Any
 from .monad import Monad
-from . import Maybe, Just, Nothing
+from . import Option, Some, Nothing
 
 
 T = TypeVar('T')
@@ -57,11 +57,11 @@ class Result(Monad[T | E], ABC):
         raise NotImplementedError
     
     @abstractmethod
-    def ok(self) -> Maybe[T]:
+    def ok(self) -> Option[T]:
         raise NotImplementedError
     
     @abstractmethod
-    def err(self) -> Maybe[E]:
+    def err(self) -> Option[E]:
         raise NotImplementedError
 
     @abstractmethod
@@ -147,10 +147,10 @@ class Ok(Result[T, Any]):
     def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         return False
     
-    def ok(self) -> Maybe[T]:
-        return Just(self._value)
+    def ok(self) -> Option[T]:
+        return Some(self._value)
 
-    def err(self) -> Maybe[E]:
+    def err(self) -> Option[E]:
         return Nothing()
 
     def map(self, fn: Callable[[T], U]) -> Monad[U]:
@@ -221,11 +221,11 @@ class Err(Result[Any, E]):
     def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         return fn(self._value)
     
-    def ok(self) -> Maybe[T]:
+    def ok(self) -> Option[T]:
         return Nothing()
     
-    def err(self) -> Maybe[E]:
-        return Just(self._value)
+    def err(self) -> Option[E]:
+        return Some(self._value)
 
     def map(self, fn: Callable[[T], U]) -> Monad[Any]:
         return self

@@ -1,13 +1,13 @@
 from .monad import Monad
-from .maybe import Maybe, Just, Nothing
+from .option import Option, Some, Nothing
 from .result import Result, Ok, Err
 from .utils import DoRet, do_notation, try_notation
 
 
 __all__ = [
     'Monad',
-    'Maybe',
-    'Just',
+    'Option',
+    'Some',
     'Nothing',
     'Result',
     'Ok',
