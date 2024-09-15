@@ -1,17 +1,17 @@
 from functools import wraps
-from typing import TypeVar, Callable, Generator, Any, TypeAlias
+from typing import TypeVar, Callable, Generator, TypeAlias, Any
 from types import GeneratorType
 from .monad import Monad
 from .result import Result, Ok, Err
 
 
-M = TypeVar('M', bound=Monad)
 T = TypeVar('T')
+DoRet: TypeAlias = Generator[Monad, Any, T]
 
 
-def do_notation(func: Callable[..., Generator[Monad, Any, M]]) -> Callable[..., M]:
+def do_notation(func: Callable[..., DoRet[Monad]]) -> Callable[..., Monad]:
     @wraps(func)
-    def _wrapper(*args, **kwargs) -> M:
+    def _wrapper(*args, **kwargs) -> Monad:
         generator = func(*args, **kwargs)
         if isinstance(generator, GeneratorType):
             monad = Monad(None)
@@ -28,9 +28,6 @@ def do_notation(func: Callable[..., Generator[Monad, Any, M]]) -> Callable[..., 
         else:
             raise TypeError('do-notation expected a generator')
     return _wrapper
-
-
-DoRet: TypeAlias = Generator[Monad, Any, T]
 
 
 def try_notation(func: Callable[..., T]) -> Callable[..., Result[T, str]]:
