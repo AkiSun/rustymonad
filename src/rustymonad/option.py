@@ -2,7 +2,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TypeVar, Callable, Any
 from .monad import Monad
-from . import Result, Ok, Err
 
 
 T = TypeVar('T')
@@ -38,7 +37,7 @@ class Option(Monad[T], ABC):
     @abstractmethod
     def is_some_and(self, fn: Callable[[T], bool]) -> bool:
         raise NotImplementedError
-    
+
     @abstractmethod
     def ok_or(self, err: E) -> Result[T, E]:
         raise NotImplementedError
@@ -205,4 +204,8 @@ class Nothing(Option[Any]):
     def __repr__(self) -> str:
         return 'Option::Nothing'
 
+
 Nothing()
+
+
+from .result import Result, Ok, Err

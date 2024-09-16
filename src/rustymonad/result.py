@@ -2,7 +2,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TypeVar, Callable, Any
 from .monad import Monad
-from . import Option, Some, Nothing
 
 
 T = TypeVar('T')
@@ -55,7 +54,7 @@ class Result(Monad[T | E], ABC):
     @abstractmethod
     def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         raise NotImplementedError
-    
+
     @abstractmethod
     def ok(self) -> Option[T]:
         raise NotImplementedError
@@ -220,7 +219,7 @@ class Err(Result[Any, E]):
     
     def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         return fn(self._value)
-    
+
     def ok(self) -> Option[T]:
         return Nothing()
     
@@ -252,3 +251,6 @@ class Err(Result[Any, E]):
 
     def __repr__(self) -> str:
         return f'Result::Err({self._value!r})'
+
+
+from .option import Option, Some, Nothing
