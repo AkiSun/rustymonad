@@ -22,6 +22,14 @@ class Result(Monad[T | E], ABC):
     @abstractmethod
     def unwrap(self) -> T:
         raise NotImplementedError
+
+    @abstractmethod
+    def unwrap_unchecked(self) -> T:
+        """直接返回值，不做任何检查。
+        
+        这是"不安全"操作，仅在确定 Result 是 Ok 时使用。
+        """
+        raise NotImplementedError
     
     @abstractmethod
     def unwrap_err(self) -> E:
@@ -29,6 +37,14 @@ class Result(Monad[T | E], ABC):
 
     @abstractmethod
     def unwrap_or(self, default: T) -> T:
+        raise NotImplementedError
+
+    @abstractmethod
+    def unwrap_or_else(self, fn: Callable[[], T]) -> T:
+        raise NotImplementedError
+
+    @abstractmethod
+    def map_err(self, fn: Callable[[E], F]) -> Result[T, F]:
         raise NotImplementedError
 
     @abstractmethod
@@ -88,6 +104,10 @@ class Result(Monad[T | E], ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def __hash__(self) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
     def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         raise NotImplementedError
 
@@ -112,7 +132,7 @@ class Ok(Result[T, Any]):
     def expect(self, msg: str) -> T:
         return self._value
     
-    def expect_err(self, msg: str):
+    def expect_err(self, msg: str) -> E:
         raise Exception(f'{msg}: {self._value}')
 
     def unwrap(self) -> T:
@@ -125,6 +145,19 @@ class Ok(Result[T, Any]):
             raise Exception(self._value)
 
     def unwrap_or(self, default: T) -> T:
+        return self._value
+
+    def unwrap_or_else(self, fn: Callable[[], T]) -> T:
+        return self._value
+
+    def map_err(self, fn: Callable[[E], F]) -> Result[T, F]:
+        return Ok(self._value)
+
+    def unwrap_unchecked(self) -> T:
+        """直接返回值，不做任何检查。
+        
+        这是"不安全"操作，仅在确定 Result 是 Ok 时使用。
+        """
         return self._value
 
     def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
@@ -172,6 +205,9 @@ class Ok(Result[T, Any]):
             return self._value == other._value
         return False
 
+    def __hash__(self) -> int:
+        return hash(self._value)
+
     def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         return fn(self._value)
 
@@ -200,6 +236,20 @@ class Err(Result[Any, E]):
 
     def unwrap_or(self, default: T) -> T:
         return default
+
+    def unwrap_or_else(self, fn: Callable[[], T]) -> T:
+        return fn()
+
+    def map_err(self, fn: Callable[[E], F]) -> Result[T, F]:
+        return Err(fn(self._value))
+
+    def unwrap_unchecked(self) -> T:
+        """直接返回值，不做任何检查。
+        
+        这是"不安全"操作，仅在确定 Result 是 Ok 时使用。
+        对于 Err 类型，调用此方法会导致错误。
+        """
+        raise RuntimeError("called `Result::unwrap_unchecked()` on an `Err` value")
 
     def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
         return self
@@ -245,6 +295,9 @@ class Err(Result[Any, E]):
         if isinstance(other, Err):
             return self._value == other._value
         return False
+
+    def __hash__(self) -> int:
+        return hash(self._value)
 
     def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         return self
