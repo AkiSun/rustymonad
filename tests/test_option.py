@@ -78,5 +78,105 @@ class OptionTestCase(unittest.TestCase):
         self.assertEqual(self.no_value.ok_or('error'), Err('error'))
 
 
+class TestAndThenTypeConsistency(unittest.TestCase):
+    """Test 1.1: Some.and_then type consistency"""
+
+    def test_and_then_returns_option_type(self):
+        """and_then should only accept fn that returns Option type"""
+        some = Some(5)
+        
+        # Valid: fn returns Option
+        result = some.and_then(lambda x: Some(x * 2))
+        self.assertEqual(result, Some(10))
+        
+        result = some.and_then(lambda x: Nothing())
+        self.assertEqual(result, Nothing())
+
+    def test_and_then_type_annotation(self):
+        """and_then should be annotated to return Option[U]"""
+        import inspect
+        sig = inspect.signature(Some.and_then)
+        return_annotation = sig.return_annotation
+        self.assertEqual(return_annotation, 'Option[U]')
+
+    def test_and_then_should_not_wrap_non_option(self):
+        """and_then should NOT wrap non-Option returns - fn must return Option"""
+        some = Some(5)
+        
+        # According to the type signature, fn should return Option[U]
+        # The current buggy implementation wraps non-Option values in Some()
+        # This should NOT be allowed - fn must return Option
+        with self.assertRaises((TypeError, AttributeError)):
+            some.and_then(lambda x: x * 2)  # Returns int, not Option
+
+
+class TestNothingSingleton(unittest.TestCase):
+    """Test 1.2: Nothing singleton optimization"""
+
+    def test_nothing_returns_same_instance(self):
+        """Nothing() should always return the same instance"""
+        n1 = Nothing()
+        n2 = Nothing()
+        self.assertIs(n1, n2)
+
+    def test_nothing_multiple_calls_same_instance(self):
+        """Multiple calls to Nothing() should return identical instance"""
+        n1 = Nothing()
+        n2 = Nothing()
+        n3 = Nothing()
+        self.assertIs(n1, n2)
+        self.assertIs(n2, n3)
+
+    def test_nothing_is_singleton(self):
+        """Nothing should be a true singleton"""
+        from src.rustymonad.option import Nothing
+        instances = [Nothing() for _ in range(10)]
+        first = instances[0]
+        for inst in instances[1:]:
+            self.assertIs(first, inst)
+
+    def test_nothing_init_called_once(self):
+        """__init__ should only be called once, not on every Nothing() call"""
+        import subprocess
+        import sys
+        
+        # Test in a fresh Python process where module loads fresh
+        test_code = '''
+import sys
+from src.rustymonad.option import Nothing
+
+# Track __init__ calls
+init_count = 0
+original_init = Nothing.__init__
+
+def counting_init(self):
+    global init_count
+    init_count += 1
+    original_init(self)
+
+Nothing.__init__ = counting_init
+
+# Create multiple instances - all should return same object
+n1 = Nothing()
+n2 = Nothing()
+n3 = Nothing()
+
+# Verify singleton
+assert n1 is n2, "Not singleton!"
+assert n2 is n3, "Not singleton!"
+
+# __init__ should only be called once
+if init_count != 1:
+    print(f"FAIL: __init__ called {init_count} times, expected 1", file=sys.stderr)
+    sys.exit(1)
+else:
+    print(f"OK: __init__ called {init_count} time")
+    sys.exit(0)
+'''
+        
+        result = subprocess.run([sys.executable, '-c', test_code], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, f"Singleton test failed: {result.stderr}{result.stdout}")
+
+
 if __name__ == '__main__':
     unittest.main()

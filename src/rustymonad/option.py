@@ -90,10 +90,23 @@ class Some(Option[T]):
         return self._value
 
     def and_then(self, fn: Callable[[T], Option[U]]) -> Option[U]:
-        if isinstance(value := fn(self._value), Option):
-            return value
-        else:
-            return Some(value)
+        """Apply a function that returns Option to the contained value.
+        
+        Args:
+            fn: A callable that takes the contained value (T) and returns Option[U]
+        
+        Returns:
+            Option[U]: The result of fn if it's Some, Nothing if the result is Nothing
+        
+        Raises:
+            TypeError: If fn does not return an Option type
+        """
+        value = fn(self._value)
+        if not isinstance(value, Option):
+            raise TypeError(
+                f"and_then expects fn to return Option, got {type(value).__name__}"
+            )
+        return value
 
     def or_else(self, fn: Callable[[], Option[U]]) -> Option[Any]:
         return self
@@ -141,15 +154,20 @@ class Some(Option[T]):
 
 
 class Nothing(Option[Any]):
-    __instance: Nothing | None = None
+    _instance: Nothing | None = None
 
     def __new__(cls) -> Nothing:
-        if cls.__instance is None:
-            cls.__instance = super().__new__(cls)
-        return cls.__instance
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
     
     def __init__(self) -> None:
-        super().__init__(Ellipsis)
+        # Use instance-level flag to track if this specific instance was initialized
+        # This prevents re-initialization even if _initialized flag is reset externally
+        flag = getattr(self, '_nothing_initialized', False)
+        if not flag:
+            super().__init__(Ellipsis)
+            self._nothing_initialized = True
 
     def expect(self, msg: str):
         raise Exception(msg)
