@@ -1,6 +1,6 @@
 import unittest
-from src.rustymonad import Option, Some, Nothing
-from src.rustymonad import Ok, Err
+from rustymonad import Option, Some, Nothing
+from rustymonad import Ok, Err
 
 
 class OptionTestCase(unittest.TestCase):
@@ -129,7 +129,7 @@ class TestNothingSingleton(unittest.TestCase):
 
     def test_nothing_is_singleton(self):
         """Nothing should be a true singleton"""
-        from src.rustymonad.option import Nothing
+        from rustymonad.option import Nothing
         instances = [Nothing() for _ in range(10)]
         first = instances[0]
         for inst in instances[1:]:
@@ -143,7 +143,7 @@ class TestNothingSingleton(unittest.TestCase):
         # Test in a fresh Python process where module loads fresh
         test_code = '''
 import sys
-from src.rustymonad.option import Nothing
+from rustymonad.option import Nothing
 
 # Track __init__ calls
 init_count = 0

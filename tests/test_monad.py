@@ -1,5 +1,5 @@
 import unittest
-from src.rustymonad import Monad
+from rustymonad import Monad
 
 
 class MonadTestCase(unittest.TestCase):
@@ -24,7 +24,7 @@ class MonadTestCase(unittest.TestCase):
         self.assertNotEqual(self.number_monad, Monad(0))
 
         self.assertEqual(self.number_monad >> (lambda x: Monad(x + 2)) >> (lambda x: Monad(x * x)), Monad(9))
-        
+
 
 if __name__ == '__main__':
     unittest.main()

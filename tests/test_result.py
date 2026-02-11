@@ -1,6 +1,6 @@
 import unittest
-from src.rustymonad import Result, Ok, Err
-from src.rustymonad import Some, Nothing
+from rustymonad import Result, Ok, Err
+from rustymonad import Some, Nothing
 
 
 class ResultTestCase(unittest.TestCase):
