@@ -979,16 +979,13 @@ class Err(ResultMixin, Result[Any, EResult]):
     def __hash__(self) -> int:
         """Return a hash value for the Err.
 
-        Note:
-            Err objects are intentionally not hashable because error values
-            (e.g., exceptions, custom error objects, lists, dicts) are often
-            not hashable. If you need to use Err in a set or as a dict key,
-            wrap the error in a hashable type (e.g., a string or tuple).
+        Returns:
+            Hash value based on the wrapped error value.
 
         Raises:
-            TypeError: Always raised since Err is not hashable.
+            TypeError: If the wrapped error value is unhashable.
         """
-        raise TypeError(f"'{type(self).__name__}' objects are not hashable")
+        return hash(self._value)
 
     def __rshift__(self, fn: Callable[[TResult], Monad[UResult]]) -> Monad[Any]:
         """Return self without calling the function.
