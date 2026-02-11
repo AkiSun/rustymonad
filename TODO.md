@@ -35,6 +35,6 @@
 ## 阶段性工作清单
 每个阶段完成后必须完成：
 - [x] 测试验证 - Some.and_then 修复已包含测试
-- [ ] 代码审查 - 待提交 PR 后执行
-- [ ] 文档完善 - 待更新 README.md 等
-- [ ] 远程推送 - 待 PR 审核通过后执行
+- [x] 代码审查 - PR 已创建，等待审核 https://github.com/AkiSun/rustymonad/compare/main...feature/rustymonad-optimizations?expand=1
+- [x] 文档完善 - README.md、CONTRIBUTING.md、CHANGELOG.md 已更新
+- [ ] 远程推送 - PR 审核通过后执行
