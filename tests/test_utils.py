@@ -1,6 +1,6 @@
 import unittest
-from src.rustymonad import Result, Ok, Err
-from src.rustymonad import DoRet, do_notation, try_notation
+from rustymonad import Result, Ok, Err
+from rustymonad import DoRet, do_notation, try_notation
 
 
 number = int | float
@@ -19,7 +19,7 @@ class ResultUtils:
         if x < 0:
             return Err('sqrt negative')
         return Ok(math.sqrt(x))
-    
+
 
 class UtilsTestCase(unittest.TestCase):
     def test_utils_do_notation(self):
