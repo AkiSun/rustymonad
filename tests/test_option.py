@@ -178,5 +178,153 @@ else:
         self.assertEqual(result.returncode, 0, f"Singleton test failed: {result.stderr}{result.stdout}")
 
 
+class TestOptionHash(unittest.TestCase):
+    """Test Option __hash__ implementation"""
+
+    def test_some_hash(self):
+        """Some should return hash of its wrapped value"""
+        self.assertEqual(hash(Some(42)), hash(42))
+        self.assertEqual(hash(Some("hello")), hash("hello"))
+        self.assertEqual(hash(Some((1, 2, 3))), hash((1, 2, 3)))
+
+    def test_nothing_hash(self):
+        """Nothing should return hash(None)"""
+        self.assertEqual(hash(Nothing()), hash(None))
+
+    def test_some_hash_consistency(self):
+        """Same value should have same hash"""
+        self.assertEqual(hash(Some(5)), hash(Some(5)))
+        self.assertEqual(hash(Some("test")), hash(Some("test")))
+
+    def test_hash_equality_with_value(self):
+        """Some(value)._value should have same hash as Some(value)"""
+        some = Some(100)
+        self.assertEqual(hash(some), hash(some._value))
+
+    def test_hashable_values(self):
+        """Hash should work with various hashable types"""
+        # Integer
+        self.assertEqual(hash(Some(1)), hash(1))
+        # String
+        self.assertEqual(hash(Some("a")), hash("a"))
+        # Tuple
+        self.assertEqual(hash(Some((1, 2))), hash((1, 2)))
+        # Frozen set
+        self.assertEqual(hash(Some(frozenset([1, 2]))), hash(frozenset([1, 2])))
+
+    def test_nothing_singleton_hash(self):
+        """All Nothing instances should have the same hash"""
+        n1 = Nothing()
+        n2 = Nothing()
+        self.assertEqual(hash(n1), hash(n2))
+
+
+class TestOptionComparison(unittest.TestCase):
+    """Test Option comparison operations (__lt__, __le__, __gt__, __ge__)"""
+
+    # Some vs Some comparisons
+    def test_some_lt_some(self):
+        """Some(1) < Some(2) should be True"""
+        self.assertTrue(Some(1) < Some(2))
+        self.assertFalse(Some(2) < Some(1))
+        self.assertFalse(Some(1) < Some(1))
+
+    def test_some_le_some(self):
+        """Some(1) <= Some(2) should be True"""
+        self.assertTrue(Some(1) <= Some(2))
+        self.assertTrue(Some(1) <= Some(1))
+        self.assertFalse(Some(2) <= Some(1))
+
+    def test_some_gt_some(self):
+        """Some(2) > Some(1) should be True"""
+        self.assertTrue(Some(2) > Some(1))
+        self.assertFalse(Some(1) > Some(2))
+        self.assertFalse(Some(1) > Some(1))
+
+    def test_some_ge_some(self):
+        """Some(2) >= Some(1) should be True"""
+        self.assertTrue(Some(2) >= Some(1))
+        self.assertTrue(Some(1) >= Some(1))
+        self.assertFalse(Some(1) >= Some(2))
+
+    # Some vs Nothing comparisons
+    def test_some_vs_nothing(self):
+        """Some > Nothing should always be True"""
+        self.assertTrue(Some(1) > Nothing())
+        self.assertTrue(Some(100) > Nothing())
+        self.assertFalse(Some(1) < Nothing())
+        self.assertTrue(Some(1) >= Nothing())
+        self.assertTrue(Some(1) <= Some(1))  # Equal should be True
+
+    def test_some_le_nothing(self):
+        """Some <= Nothing should be False"""
+        self.assertFalse(Some(1) <= Nothing())
+
+    def test_some_ge_nothing(self):
+        """Some >= Nothing should be True"""
+        self.assertTrue(Some(1) >= Nothing())
+
+    # Nothing vs Some comparisons
+    def test_nothing_vs_some(self):
+        """Nothing < Some should always be True"""
+        self.assertTrue(Nothing() < Some(1))
+        self.assertFalse(Nothing() > Some(1))
+        self.assertTrue(Nothing() <= Some(1))
+        self.assertFalse(Nothing() >= Some(1))
+
+    def test_nothing_le_some(self):
+        """Nothing <= Some should be True"""
+        self.assertTrue(Nothing() <= Some(1))
+
+    def test_nothing_ge_some(self):
+        """Nothing >= Some should be False"""
+        self.assertFalse(Nothing() >= Some(1))
+
+    # Nothing vs Nothing comparisons
+    def test_nothing_lt_nothing(self):
+        """Nothing < Nothing should be False"""
+        self.assertFalse(Nothing() < Nothing())
+
+    def test_nothing_le_nothing(self):
+        """Nothing <= Nothing should be True (equal)"""
+        self.assertTrue(Nothing() <= Nothing())
+
+    def test_nothing_gt_nothing(self):
+        """Nothing > Nothing should be False"""
+        self.assertFalse(Nothing() > Nothing())
+
+    def test_nothing_ge_nothing(self):
+        """Nothing >= Nothing should be True (equal)"""
+        self.assertTrue(Nothing() >= Nothing())
+
+    # String comparison
+    def test_some_string_comparison(self):
+        """String Some values should be comparable"""
+        self.assertTrue(Some("a") < Some("b"))
+        self.assertTrue(Some("b") > Some("a"))
+        self.assertTrue(Some("a") <= Some("a"))
+        self.assertTrue(Some("a") >= Some("a"))
+
+    # Test with custom objects that support comparison
+    def test_some_custom_comparison(self):
+        """Some with custom comparable objects"""
+        self.assertTrue(Some(5) < Some(10))
+        self.assertTrue(Some(10) > Some(5))
+        self.assertTrue(Some(5) <= Some(10))
+        self.assertTrue(Some(10) >= Some(5))
+
+    # Test TypeError for incompatible types
+    def test_comparison_type_error(self):
+        """Comparison with incompatible types should raise TypeError"""
+        with self.assertRaises(TypeError):
+            Some(1) < "string"
+        
+        with self.assertRaises(TypeError):
+            Some(1) <= 123
+        
+        with self.assertRaises(TypeError):
+            Nothing() > []
+
+
 if __name__ == '__main__':
     unittest.main()

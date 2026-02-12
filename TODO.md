@@ -38,3 +38,63 @@
 - [x] 代码审查 - PR 已创建，等待审核 https://github.com/AkiSun/rustymonad/compare/main...feature/rustymonad-optimizations?expand=1
 - [x] 文档完善 - README.md、CONTRIBUTING.md、CHANGELOG.md 已更新
 - [ ] 远程推送 - PR 审核通过后执行
+
+---
+
+# rustymonad 第二阶段优化（2026-02-11 新增，2026-02-12 确认）
+
+## 需求文档
+
+### 1. 泛型命名改进
+| TypeVar | 含义 |
+|---------|------|
+| `T` | 被 Ok/Some 包裹的普通类型 |
+| `U` | 被 Ok/Some 包裹的普通类型（可与 T 不同） |
+| `E` | 被 Err 包裹的类型（普通类型或异常类型） |
+| `F` | 被 Err 包裹的类型（可与 E 不同） |
+
+### 2. Option Hash 实现
+| 类型 | hash 实现 |
+|------|----------|
+| `Some` | `hash(_value)` |
+| `Nothing` | `hash(None)` |
+
+### 3. 比较运算
+直接比较内部值，类型不一致或不可比较时抛出错误：
+- `Some(5) < Some(10)` → `True`
+- `Nothing() < Some(5)` → `True`（Nothing 视为最小值）
+
+### 4. 性能基准测试
+分别测试以下场景的性能开销：
+- 基础计算脚本（无 Monad）
+- 引入 Result 的脚本
+- 引入 Option 的脚本
+- 引入 do_notation 的脚本
+- 三者混用的脚本
+
+---
+
+## P0 - 核心改进
+- [x] #1 改进 monad.py 泛型命名（`TMonad` → `T`, `UMonad` → `U`） - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #2 改进 option.py 泛型命名（`TOption` → `T`, `UOption` → `U`, `EOption` → `E`） - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #3 改进 result.py 泛型命名（`TResult` → `T`, `UResult` → `U`, `EResult` → `E`, `FResult` → `F`） - [负责人: subagent] - [状态: 已完成 2026-02-12]
+
+## P1 - 新特性
+- [x] #4 实现 Option 的 `__hash__`（Some → hash(value), Nothing → hash(None)） - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #5 实现 Option 比较运算（`__lt__`, `__le__`, `__gt__`, `__ge__`） - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #6 实现 Result 比较运算（`__lt__`, `__le__`, `__gt__`, `__ge__`） - [负责人: subagent] - [状态: 已完成 2026-02-12]
+
+## P2 - 性能测试
+- [x] #7 创建性能基准测试脚本 - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #8 单独测试 Result 性能开销 - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #9 单独测试 Option 性能开销 - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #10 单独测试 do_notation 性能开销 - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #11 测试三者混用性能 - [负责人: subagent] - [状态: 已完成 2026-02-12]
+- [x] #12 生成性能报告 - [负责人: subagent] - [状态: 已完成 2026-02-12]
+
+## 阶段性工作清单
+- [x] 测试验证 - 所有新功能必须包含单元测试
+- [x] 代码审查 - 审核通过
+- [x] README.md 更新 - 添加 __hash__ 和比较运算说明
+- [x] 测试用例修复 - 将 NotImplemented 预期改为 TypeError
+- [ ] 远程推送 - 推送到远程仓库

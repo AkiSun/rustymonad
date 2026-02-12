@@ -10,11 +10,11 @@ from typing import TypeVar, Generic, Callable
 import copy
 
 
-TMonad = TypeVar('TMonad')
-UMonad = TypeVar('UMonad')
+T = TypeVar('T')
+U = TypeVar('U')
 
 
-class Monad(Generic[TMonad]):
+class Monad(Generic[T]):
     """Base monad class providing fundamental monadic operations.
 
     This class serves as the foundation for Option and Result types.
@@ -34,7 +34,7 @@ class Monad(Generic[TMonad]):
     __slots__ = ('_value',)
     __match_args__ = ('_value',)
 
-    def __init__(self, value: TMonad) -> None:
+    def __init__(self, value: T) -> None:
         """Initialize a Monad with the given value.
 
         Args:
@@ -42,7 +42,7 @@ class Monad(Generic[TMonad]):
         """
         self._value = value
 
-    def unwrap(self) -> TMonad:
+    def unwrap(self) -> T:
         """Return the contained value.
 
         Returns:
@@ -50,7 +50,7 @@ class Monad(Generic[TMonad]):
         """
         return self._value
 
-    def map(self, fn: Callable[[TMonad], UMonad]) -> Monad[UMonad]:
+    def map(self, fn: Callable[[T], U]) -> Monad[U]:
         """Apply a function to the contained value.
 
         Args:
@@ -65,7 +65,7 @@ class Monad(Generic[TMonad]):
         """
         return Monad(fn(self._value))
 
-    def flatmap(self, fn: Callable[[TMonad], Monad[UMonad]]) -> Monad[UMonad]:
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Apply a function that returns a Monad to the contained value.
 
         Args:
@@ -103,7 +103,15 @@ class Monad(Generic[TMonad]):
             return self._value == other._value
         return False
 
-    def __rshift__(self, fn: Callable[[TMonad], Monad[UMonad]]):
+    def __hash__(self) -> int:
+        """Return a hash value for the Monad.
+
+        Returns:
+            Hash value based on the wrapped value.
+        """
+        return hash(self._value)
+
+    def __rshift__(self, fn: Callable[[T], Monad[U]]):
         """Bind operation using >> operator.
 
         This enables the >> operator for chaining monadic operations.
@@ -128,7 +136,7 @@ class Monad(Generic[TMonad]):
         """
         return f'Monad({self._value!r})'
 
-    def __copy__(self) -> "Monad[TMonad]":
+    def __copy__(self) -> "Monad[T]":
         """Create a shallow copy of the Monad.
 
         Returns:
@@ -136,7 +144,7 @@ class Monad(Generic[TMonad]):
         """
         return self.__class__(copy.copy(self._value))
 
-    def __deepcopy__(self, memo: dict) -> "Monad[TMonad]":
+    def __deepcopy__(self, memo: dict) -> "Monad[T]":
         """Create a deep copy of the Monad.
 
         Args:

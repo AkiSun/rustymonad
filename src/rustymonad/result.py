@@ -34,10 +34,10 @@ from .errors import (
 )
 
 
-TResult = TypeVar("TResult")
-UResult = TypeVar("UResult")
-EResult = TypeVar("EResult")
-FResult = TypeVar("FResult")
+T = TypeVar("T")
+U = TypeVar("U")
+E = TypeVar("E")
+F = TypeVar("F")
 
 
 class ResultMixin:
@@ -71,7 +71,7 @@ class ResultMixin:
         """
         return f"{msg}: {value}"
 
-    def _identity_map(self, fn: Callable[[TResult], UResult]) -> Result:
+    def _identity_map(self, fn: Callable[[T], U]) -> Result:
         """Common pattern for methods that return self in Err case.
 
         Args:
@@ -82,7 +82,7 @@ class ResultMixin:
         """
         return self
 
-    def _apply_fn_if_valid(self, fn: Callable[[TResult], None]) -> "Result":
+    def _apply_fn_if_valid(self, fn: Callable[[T], None]) -> "Result":
         """Common pattern for inspect methods.
 
         Args:
@@ -94,7 +94,7 @@ class ResultMixin:
         return self
 
 
-class Result(Monad[TResult | EResult], ABC):
+class Result(Monad[T | E], ABC):
     """Abstract base class for Result type.
 
     Result represents either a success (Ok) or a failure (Err). This abstract
@@ -114,7 +114,7 @@ class Result(Monad[TResult | EResult], ABC):
     __slots__ = ()
 
     @abstractmethod
-    def expect(self, msg: str) -> TResult:
+    def expect(self, msg: str) -> T:
         """Return the Ok value or raise with a custom message.
 
         Args:
@@ -129,7 +129,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def expect_err(self, msg: str) -> EResult:
+    def expect_err(self, msg: str) -> E:
         """Return the Err value or raise with a custom message.
 
         Args:
@@ -144,7 +144,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unwrap(self) -> TResult:
+    def unwrap(self) -> T:
         """Return the Ok value.
 
         Returns:
@@ -156,7 +156,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unwrap_unchecked(self) -> TResult:
+    def unwrap_unchecked(self) -> T:
         """Return the value directly without any checks.
 
         This is an "unsafe" operation, only use when sure Result is Ok.
@@ -170,7 +170,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unwrap_err(self) -> EResult:
+    def unwrap_err(self) -> E:
         """Return the Err value.
 
         Returns:
@@ -182,7 +182,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unwrap_or(self, default: TResult) -> TResult:
+    def unwrap_or(self, default: T) -> T:
         """Return the Ok value or a default if Err.
 
         Args:
@@ -194,7 +194,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unwrap_or_else(self, fn: Callable[[], TResult]) -> TResult:
+    def unwrap_or_else(self, fn: Callable[[], T]) -> T:
         """Return the Ok value or compute from a function if Err.
 
         Args:
@@ -206,7 +206,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def map_err(self, fn: Callable[[EResult], FResult]) -> Result[TResult, FResult]:
+    def map_err(self, fn: Callable[[E], F]) -> Result[T, F]:
         """Map the Err value to a new error type.
 
         Args:
@@ -218,11 +218,11 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def and_then(self, fn: Callable[[TResult], Result[UResult, EResult]]) -> Result[UResult, EResult]:
+    def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
         """Apply a function that returns Result to the Ok value.
 
         Args:
-            fn: A callable that takes the Ok value and returns Result[UResult, EResult].
+            fn: A callable that takes the Ok value and returns Result[U, E].
 
         Returns:
             The result of fn if Ok, otherwise self (Err).
@@ -234,11 +234,11 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def or_else(self, fn: Callable[[EResult], Result[UResult, EResult]]) -> Result[UResult, EResult]:
+    def or_else(self, fn: Callable[[E], Result[U, E]]) -> Result[U, E]:
         """Apply a function that returns Result to the Err value.
 
         Args:
-            fn: A callable that takes the Err value and returns Result[UResult, EResult].
+            fn: A callable that takes the Err value and returns Result[U, E].
 
         Returns:
             self if Ok, otherwise the result of fn.
@@ -246,7 +246,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def inspect(self, fn: Callable[[TResult], None]) -> Result[TResult, EResult]:
+    def inspect(self, fn: Callable[[T], None]) -> Result[T, E]:
         """Inspect the Ok value without modifying it.
 
         Args:
@@ -262,7 +262,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def inspect_err(self, fn: Callable[[EResult], None]) -> Result[TResult, EResult]:
+    def inspect_err(self, fn: Callable[[E], None]) -> Result[T, E]:
         """Inspect the Err value without modifying it.
 
         Args:
@@ -274,7 +274,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def is_ok_and(self, fn: Callable[[TResult], bool]) -> bool:
+    def is_ok_and(self, fn: Callable[[T], bool]) -> bool:
         """Check if Ok and the value satisfies a predicate.
 
         Args:
@@ -286,7 +286,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def is_err_and(self, fn: Callable[[EResult], bool]) -> bool:
+    def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         """Check if Err and the error satisfies a predicate.
 
         Args:
@@ -298,7 +298,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def ok(self) -> Option[TResult]:
+    def ok(self) -> Option[T]:
         """Convert to Option, mapping Ok to Some.
 
         Returns:
@@ -307,7 +307,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def err(self) -> Option[EResult]:
+    def err(self) -> Option[E]:
         """Convert to Option, mapping Err to Some.
 
         Returns:
@@ -316,7 +316,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def map(self, fn: Callable[[TResult], UResult]) -> Monad[UResult]:
+    def map(self, fn: Callable[[T], U]) -> Monad[U]:
         """Apply a function to the Ok value.
 
         Args:
@@ -328,11 +328,11 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def flatmap(self, fn: Callable[[TResult], Monad[UResult]]) -> Monad[UResult]:
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Apply a function that returns a Monad to the Ok value.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UResult].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn if Ok, otherwise self (Err).
@@ -388,11 +388,11 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __rshift__(self, fn: Callable[[TResult], Monad[UResult]]) -> Monad[UResult]:
+    def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Bind operation using >> operator.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UResult].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn if Ok, otherwise self (Err).
@@ -409,7 +409,7 @@ class Result(Monad[TResult | EResult], ABC):
         raise NotImplementedError
 
     @staticmethod
-    def try_catch(fn: Callable[[TResult], UResult]) -> Callable[[TResult], Result[UResult, str]]:
+    def try_catch(fn: Callable[[T], U]) -> Callable[[T], Result[U, str]]:
         """Decorator that wraps a function to catch exceptions as Result.
 
         Args:
@@ -435,7 +435,7 @@ class Result(Monad[TResult | EResult], ABC):
         return _wrapper
 
 
-class Ok(ResultMixin, Result[TResult, Any]):
+class Ok(ResultMixin, Result[T, Any]):
     """Result variant that represents a successful value.
 
     Ok represents the success variant of Result. It contains a value
@@ -449,7 +449,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
     """
     __slots__ = ()
 
-    def __init__(self, value: TResult) -> None:
+    def __init__(self, value: T) -> None:
         """Initialize Ok with a success value.
 
         Args:
@@ -457,7 +457,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         super().__init__(value)
 
-    def expect(self, msg: str) -> TResult:
+    def expect(self, msg: str) -> T:
         """Return the contained value (Ok always returns the value).
 
         Args:
@@ -468,7 +468,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return self._value
 
-    def expect_err(self, msg: str) -> EResult:
+    def expect_err(self, msg: str) -> E:
         """Raise ExpectError (Ok never has an error value).
 
         Args:
@@ -479,7 +479,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         raise ExpectError(self._format_error_msg(msg, self._value), self._value)
 
-    def unwrap(self) -> TResult:
+    def unwrap(self) -> T:
         """Return the contained value.
 
         Returns:
@@ -495,7 +495,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         self._raise_value(self._value)
 
-    def unwrap_or(self, default: TResult) -> TResult:
+    def unwrap_or(self, default: T) -> T:
         """Return the contained value (ignores the default).
 
         Args:
@@ -506,7 +506,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return self._value
 
-    def unwrap_or_else(self, fn: Callable[[], TResult]) -> TResult:
+    def unwrap_or_else(self, fn: Callable[[], T]) -> T:
         """Return the contained value (ignores the function).
 
         Args:
@@ -517,7 +517,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return self._value
 
-    def map_err(self, fn: Callable[[EResult], FResult]) -> Result[TResult, FResult]:
+    def map_err(self, fn: Callable[[E], F]) -> Result[T, F]:
         """Return Ok without calling the function.
 
         Args:
@@ -528,7 +528,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return Ok(self._value)
 
-    def unwrap_unchecked(self) -> TResult:
+    def unwrap_unchecked(self) -> T:
         """Return the value directly without any checks.
 
         This is an "unsafe" operation, only use when sure Result is Ok.
@@ -538,18 +538,18 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return self._value
 
-    def and_then(self, fn: Callable[[TResult], Result[UResult, EResult]]) -> Result[UResult, EResult]:
+    def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
         """Apply fn to the contained value and return the result.
 
         Args:
-            fn: A callable that takes the value and returns Result[UResult, EResult].
+            fn: A callable that takes the value and returns Result[U, E].
 
         Returns:
             The result of fn(value).
         """
         return fn(self._value)
 
-    def or_else(self, fn: Callable[[EResult], Result[UResult, EResult]]) -> Result[Any, EResult]:
+    def or_else(self, fn: Callable[[E], Result[U, E]]) -> Result[Any, E]:
         """Return self without calling the function.
 
         Args:
@@ -560,7 +560,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return self
 
-    def inspect(self, fn: Callable[[TResult], None]) -> Result[TResult, EResult]:
+    def inspect(self, fn: Callable[[T], None]) -> Result[T, E]:
         """Inspect the contained value.
 
         Args:
@@ -572,7 +572,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         fn(self._value)
         return self
 
-    def inspect_err(self, fn: Callable[[EResult], None]) -> Result[TResult, EResult]:
+    def inspect_err(self, fn: Callable[[E], None]) -> Result[T, E]:
         """Do nothing (the error function is not called for Ok).
 
         Args:
@@ -583,7 +583,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return self
 
-    def is_ok_and(self, fn: Callable[[TResult], bool]) -> bool:
+    def is_ok_and(self, fn: Callable[[T], bool]) -> bool:
         """Check if the value satisfies the predicate.
 
         Args:
@@ -594,7 +594,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return fn(self._value)
 
-    def is_err_and(self, fn: Callable[[EResult], bool]) -> bool:
+    def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         """Return False (Ok never has an error).
 
         Args:
@@ -605,7 +605,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return False
 
-    def ok(self) -> Option[TResult]:
+    def ok(self) -> Option[T]:
         """Convert to Some.
 
         Returns:
@@ -613,7 +613,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return Some(self._value)
 
-    def err(self) -> Option[EResult]:
+    def err(self) -> Option[E]:
         """Convert to Nothing (Ok has no error).
 
         Returns:
@@ -621,7 +621,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return Nothing()
 
-    def map(self, fn: Callable[[TResult], UResult]) -> Monad[UResult]:
+    def map(self, fn: Callable[[T], U]) -> Monad[U]:
         """Apply fn to the contained value.
 
         Args:
@@ -632,11 +632,11 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return Ok(fn(self._value))
 
-    def flatmap(self, fn: Callable[[TResult], Monad[UResult]]) -> Monad[UResult]:
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Apply fn to the contained value.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UResult].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn(value).
@@ -680,6 +680,82 @@ class Ok(ResultMixin, Result[TResult, Any]):
             return self._value == other._value
         return False
 
+    def __lt__(self, other: object) -> bool:
+        """Less than comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Err (Ok < Err),
+            True if other is Ok and self._value < other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Err):
+            return True  # Ok < Err
+        if isinstance(other, Ok):
+            return self._value < other._value
+        raise TypeError(
+            f"'<' not supported between instances of 'Ok' and '{type(other).__name__}'"
+        )
+
+    def __le__(self, other: object) -> bool:
+        """Less than or equal comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Err (Ok < Err),
+            True if other is Ok and self._value <= other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Err):
+            return True  # Ok < Err
+        if isinstance(other, Ok):
+            return self._value <= other._value
+        raise TypeError(
+            f"'<=' not supported between instances of 'Ok' and '{type(other).__name__}'"
+        )
+
+    def __gt__(self, other: object) -> bool:
+        """Greater than comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            False if other is Err (Ok < Err),
+            True if other is Ok and self._value > other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Err):
+            return False  # Ok < Err
+        if isinstance(other, Ok):
+            return self._value > other._value
+        raise TypeError(
+            f"'>' not supported between instances of 'Ok' and '{type(other).__name__}'"
+        )
+
+    def __ge__(self, other: object) -> bool:
+        """Greater than or equal comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            False if other is Err (Ok < Err),
+            True if other is Ok and self._value >= other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Err):
+            return False  # Ok < Err
+        if isinstance(other, Ok):
+            return self._value >= other._value
+        raise TypeError(
+            f"'>=' not supported between instances of 'Ok' and '{type(other).__name__}'"
+        )
+
     def __hash__(self) -> int:
         """Return a hash value for the Ok.
 
@@ -694,11 +770,11 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return hash(self._value)
 
-    def __rshift__(self, fn: Callable[[TResult], Monad[UResult]]) -> Monad[UResult]:
+    def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Apply fn to the contained value and return the result.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UResult].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn(value).
@@ -713,7 +789,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return f"Result::Ok({self._value!r})"
 
-    def __copy__(self) -> "Ok[TResult]":
+    def __copy__(self) -> "Ok[T]":
         """Create a shallow copy of Ok.
 
         Returns:
@@ -721,7 +797,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         """
         return Ok(copy.copy(self._value))
 
-    def __deepcopy__(self, memo: dict) -> "Ok[TResult]":
+    def __deepcopy__(self, memo: dict) -> "Ok[T]":
         """Create a deep copy of Ok.
 
         Args:
@@ -733,7 +809,7 @@ class Ok(ResultMixin, Result[TResult, Any]):
         return Ok(copy.deepcopy(self._value, memo))
 
 
-class Err(ResultMixin, Result[Any, EResult]):
+class Err(ResultMixin, Result[Any, E]):
     """Result variant that represents an error.
 
     Err represents the error variant of Result. It contains an error
@@ -747,7 +823,7 @@ class Err(ResultMixin, Result[Any, EResult]):
     """
     __slots__ = ()
 
-    def __init__(self, value: EResult) -> None:
+    def __init__(self, value: E) -> None:
         """Initialize Err with an error value.
 
         Args:
@@ -766,7 +842,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         raise ExpectError(self._format_error_msg(msg, self._value), self._value)
 
-    def expect_err(self, msg: str) -> EResult:
+    def expect_err(self, msg: str) -> E:
         """Return the contained error value.
 
         Args:
@@ -785,7 +861,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         self._raise_value(self._value)
 
-    def unwrap_err(self) -> EResult:
+    def unwrap_err(self) -> E:
         """Return the contained error value.
 
         Returns:
@@ -793,7 +869,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return self._value
 
-    def unwrap_or(self, default: TResult) -> TResult:
+    def unwrap_or(self, default: T) -> T:
         """Return the default value.
 
         Args:
@@ -804,7 +880,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return default
 
-    def unwrap_or_else(self, fn: Callable[[], TResult]) -> TResult:
+    def unwrap_or_else(self, fn: Callable[[], T]) -> T:
         """Call the function and return its result.
 
         Args:
@@ -815,7 +891,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return fn()
 
-    def map_err(self, fn: Callable[[EResult], FResult]) -> Result[TResult, FResult]:
+    def map_err(self, fn: Callable[[E], F]) -> Result[T, F]:
         """Apply fn to the error value.
 
         Args:
@@ -826,7 +902,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return Err(fn(self._value))
 
-    def unwrap_unchecked(self) -> TResult:
+    def unwrap_unchecked(self) -> T:
         """Raise UnwrapUncheckedError (Err is never safe to unwrap).
 
         Raises:
@@ -834,7 +910,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         raise UnwrapUncheckedError(self._value)
 
-    def and_then(self, fn: Callable[[TResult], Result[UResult, EResult]]) -> Result[UResult, EResult]:
+    def and_then(self, fn: Callable[[T], Result[U, E]]) -> Result[U, E]:
         """Return self without calling the function.
 
         Args:
@@ -845,7 +921,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return self
 
-    def or_else(self, fn: Callable[[EResult], Result[UResult, EResult]]) -> Result[UResult, EResult]:
+    def or_else(self, fn: Callable[[E], Result[U, E]]) -> Result[U, E]:
         """Apply fn to the error value and return the result.
 
         Args:
@@ -856,7 +932,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return fn(self._value)
 
-    def inspect(self, fn: Callable[[TResult], None]) -> Result[TResult, EResult]:
+    def inspect(self, fn: Callable[[T], None]) -> Result[T, E]:
         """Do nothing (the function is not called for Err).
 
         Args:
@@ -867,7 +943,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return self
 
-    def inspect_err(self, fn: Callable[[EResult], None]) -> Result[TResult, EResult]:
+    def inspect_err(self, fn: Callable[[E], None]) -> Result[T, E]:
         """Inspect the error value.
 
         Args:
@@ -879,7 +955,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         fn(self._value)
         return self
 
-    def is_ok_and(self, fn: Callable[[TResult], bool]) -> bool:
+    def is_ok_and(self, fn: Callable[[T], bool]) -> bool:
         """Return False (Err never has a success value).
 
         Args:
@@ -890,7 +966,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return False
 
-    def is_err_and(self, fn: Callable[[EResult], bool]) -> bool:
+    def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         """Check if the error satisfies the predicate.
 
         Args:
@@ -901,7 +977,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return fn(self._value)
 
-    def ok(self) -> Option[TResult]:
+    def ok(self) -> Option[T]:
         """Convert to Nothing (Err has no success value).
 
         Returns:
@@ -909,7 +985,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return Nothing()
 
-    def err(self) -> Option[EResult]:
+    def err(self) -> Option[E]:
         """Convert to Some.
 
         Returns:
@@ -917,7 +993,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return Some(self._value)
 
-    def map(self, fn: Callable[[TResult], UResult]) -> Monad[Any]:
+    def map(self, fn: Callable[[T], U]) -> Monad[Any]:
         """Return self without calling the function.
 
         Args:
@@ -928,7 +1004,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return self
 
-    def flatmap(self, fn: Callable[[TResult], Monad[UResult]]) -> Monad[Any]:
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         """Return self without calling the function.
 
         Args:
@@ -976,6 +1052,82 @@ class Err(ResultMixin, Result[Any, EResult]):
             return self._value == other._value
         return False
 
+    def __lt__(self, other: object) -> bool:
+        """Less than comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            False if other is Ok (Err > Ok),
+            True if other is Err and self._value < other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Ok):
+            return False  # Err > Ok
+        if isinstance(other, Err):
+            return self._value < other._value
+        raise TypeError(
+            f"'<' not supported between instances of 'Err' and '{type(other).__name__}'"
+        )
+
+    def __le__(self, other: object) -> bool:
+        """Less than or equal comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            False if other is Ok (Err > Ok),
+            True if other is Err and self._value <= other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Ok):
+            return False  # Err > Ok
+        if isinstance(other, Err):
+            return self._value <= other._value
+        raise TypeError(
+            f"'<=' not supported between instances of 'Err' and '{type(other).__name__}'"
+        )
+
+    def __gt__(self, other: object) -> bool:
+        """Greater than comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Ok (Err > Ok),
+            True if other is Err and self._value > other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Ok):
+            return True  # Err > Ok
+        if isinstance(other, Err):
+            return self._value > other._value
+        raise TypeError(
+            f"'>' not supported between instances of 'Err' and '{type(other).__name__}'"
+        )
+
+    def __ge__(self, other: object) -> bool:
+        """Greater than or equal comparison for Result.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Ok (Err > Ok),
+            True if other is Err and self._value >= other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Ok):
+            return True  # Err > Ok
+        if isinstance(other, Err):
+            return self._value >= other._value
+        raise TypeError(
+            f"'>=' not supported between instances of 'Err' and '{type(other).__name__}'"
+        )
+
     def __hash__(self) -> int:
         """Return a hash value for the Err.
 
@@ -987,7 +1139,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return hash(self._value)
 
-    def __rshift__(self, fn: Callable[[TResult], Monad[UResult]]) -> Monad[Any]:
+    def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         """Return self without calling the function.
 
         Args:
@@ -1006,7 +1158,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return f"Result::Err({self._value!r})"
 
-    def __copy__(self) -> "Err[EResult]":
+    def __copy__(self) -> "Err[E]":
         """Create a shallow copy of Err.
 
         Returns:
@@ -1014,7 +1166,7 @@ class Err(ResultMixin, Result[Any, EResult]):
         """
         return Err(copy.copy(self._value))
 
-    def __deepcopy__(self, memo: dict) -> "Err[EResult]":
+    def __deepcopy__(self, memo: dict) -> "Err[E]":
         """Create a deep copy of Err.
 
         Args:

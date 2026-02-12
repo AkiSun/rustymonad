@@ -226,7 +226,64 @@ original.unwrap()  # [1, 2, 3, 4] - original not affected
 deep.unwrap()      # [1, 2, 3, 4, 5]
 ```
 
-### 8. Operator Overloading
+### 8. Hash Support
+
+All monadic types are hashable, allowing use in sets and as dictionary keys:
+
+```python
+from rustymonad import Ok, Err, Some, Nothing
+
+# Hash Some values
+some_hashable = Some(42)
+hash(some_hashable)  # Returns hash of the wrapped value
+hash(Some("hello"))  # Returns hash of "hello"
+
+# Hash Nothing
+nothing_hash = hash(Nothing())  # Returns hash(None)
+
+# Use in sets and dicts
+seen = {Some(1), Some(2), Some(1)}  # {Some(1), Some(2)}
+value_map = {Some(10): "ten"}       # Can use as dict key
+```
+
+### 9. Comparison Operations
+
+Compare `Option` and `Result` types using standard comparison operators:
+
+```python
+from rustymonad import Ok, Err, Some, Nothing
+
+# Option comparisons
+assert Some(1) < Some(2)      # Some with smaller value is less
+assert Some(1) <= Some(1)      # Equal values are equal
+assert Some(2) > Some(1)       # Some with larger value is greater
+assert Some(1) >= Some(1)      # Equal values are equal
+
+# Some vs Nothing - Some is always greater
+assert Some(1) > Nothing()
+assert Nothing() < Some(1)
+
+# Result comparisons - Ok vs Ok
+assert Ok(1) < Ok(2)
+assert Ok(1) <= Ok(1)
+assert Ok(2) > Ok(1)
+assert Ok(1) >= Ok(1)
+
+# Result comparisons - Err vs Err
+assert Err('a') < Err('b')
+assert Err('b') > Err('a')
+
+# Result comparisons - Ok vs Err
+# Ok is always less than Err (Ok is preferred/success state)
+assert Ok(1) < Err("error")
+assert Err("error") > Ok(1)
+
+# TypeError for incompatible comparisons
+# Comparing with incompatible types raises TypeError
+# Some(1) < "string"  # Raises TypeError
+```
+
+### 10. Operator Overloading
 
 Use the `>>` operator for chaining:
 

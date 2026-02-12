@@ -25,13 +25,12 @@ from .monad import Monad
 from .errors import ExpectOptionError, UnwrapOptionError
 
 
-TOption = TypeVar("TOption")
-UOption = TypeVar("UOption")
+T = TypeVar("T")
 U = TypeVar("U")
-EOption = TypeVar("EOption")
+E = TypeVar("E")
 
 
-class Option(Monad[TOption], ABC):
+class Option(Monad[T], ABC):
     """Abstract base class for Option type.
 
     Option represents a value that may or may not exist. This abstract class
@@ -52,7 +51,7 @@ class Option(Monad[TOption], ABC):
     __slots__ = ()
 
     @abstractmethod
-    def expect(self, msg: str) -> TOption:
+    def expect(self, msg: str) -> T:
         """Return the contained value or raise with a custom message.
 
         Args:
@@ -67,7 +66,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unwrap(self) -> TOption:
+    def unwrap(self) -> T:
         """Return the contained value.
 
         Returns:
@@ -79,7 +78,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unwrap_or(self, default: TOption) -> TOption:
+    def unwrap_or(self, default: T) -> T:
         """Return the contained value or a default if Nothing.
 
         Args:
@@ -91,11 +90,11 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def and_then(self, fn: Callable[[TOption], Option[UOption]]) -> Option[UOption]:
+    def and_then(self, fn: Callable[[T], Option[U]]) -> Option[U]:
         """Apply a function that returns Option to the contained value.
 
         Args:
-            fn: A callable that takes the contained value and returns Option[UOption].
+            fn: A callable that takes the contained value and returns Option[U].
 
         Returns:
             The result of fn if Some, Nothing if the result is Nothing.
@@ -107,7 +106,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def or_else(self, fn: Callable[[], Option[UOption]]) -> Option[UOption]:
+    def or_else(self, fn: Callable[[], Option[U]]) -> Option[U]:
         """Return the contained value or compute an alternative.
 
         Args:
@@ -123,7 +122,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def inspect(self, fn: Callable[[TOption], None]) -> Option[TOption]:
+    def inspect(self, fn: Callable[[T], None]) -> Option[T]:
         """Inspect the contained value without modifying it.
 
         Args:
@@ -139,7 +138,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def is_some_and(self, fn: Callable[[TOption], bool]) -> bool:
+    def is_some_and(self, fn: Callable[[T], bool]) -> bool:
         """Check if Some and the value satisfies a predicate.
 
         Args:
@@ -155,7 +154,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def ok_or(self, err: EOption) -> Result[TOption, EOption]:
+    def ok_or(self, err: E) -> Result[T, E]:
         """Convert to a Result, mapping Nothing to Err.
 
         Args:
@@ -171,7 +170,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def filter(self, fn: Callable[[TOption], bool]) -> Option[TOption]:
+    def filter(self, fn: Callable[[T], bool]) -> Option[T]:
         """Keep the value only if it satisfies a predicate.
 
         Args:
@@ -187,7 +186,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def map(self, fn: Callable[[TOption], UOption]) -> Monad[UOption]:
+    def map(self, fn: Callable[[T], U]) -> Monad[U]:
         """Apply a function to the contained value.
 
         Args:
@@ -203,11 +202,11 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def flatmap(self, fn: Callable[[TOption], Monad[UOption]]) -> Monad[UOption]:
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Apply a function that returns a Monad to the contained value.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UOption].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn if Some, Nothing if Nothing.
@@ -245,24 +244,17 @@ class Option(Monad[TOption], ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def __eq__(self, other: object) -> bool:
-        """Check equality with another Option.
-
-        Args:
-            other: The object to compare.
-
-        Returns:
-            True if both are Some with equal values or both are Nothing.
-        """
-        raise NotImplementedError
+    # Note: We don't define __eq__ and __hash__ as abstract here because
+    # Option inherits __eq__ and __hash__ from Monad, which already provides
+    # correct implementations. The concrete Some and Nothing classes override
+    # these methods as needed.
 
     @abstractmethod
-    def __rshift__(self, fn: Callable[[TOption], Monad[UOption]]) -> Monad[UOption]:
+    def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Bind operation using >> operator.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UOption].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn if Some, Nothing if Nothing.
@@ -279,7 +271,7 @@ class Option(Monad[TOption], ABC):
         raise NotImplementedError
 
 
-class Some(Option[TOption]):
+class Some(Option[T]):
     """Option variant that contains a value.
 
     Some represents the presence of a value. It is created by wrapping
@@ -293,7 +285,7 @@ class Some(Option[TOption]):
     """
     __slots__ = ()
 
-    def expect(self, msg: str) -> TOption:
+    def expect(self, msg: str) -> T:
         """Return the contained value (Some always returns the value).
 
         Args:
@@ -304,7 +296,7 @@ class Some(Option[TOption]):
         """
         return self._value
 
-    def unwrap(self) -> TOption:
+    def unwrap(self) -> T:
         """Return the contained value.
 
         Returns:
@@ -312,7 +304,7 @@ class Some(Option[TOption]):
         """
         return self._value
 
-    def unwrap_or(self, default: TOption) -> TOption:
+    def unwrap_or(self, default: T) -> T:
         """Return the contained value (ignores the default).
 
         Args:
@@ -323,7 +315,7 @@ class Some(Option[TOption]):
         """
         return self._value
 
-    def or_else(self, fn: Callable[[], Option[UOption]]) -> Option[Any]:
+    def or_else(self, fn: Callable[[], Option[U]]) -> Option[Any]:
         """Return the contained value (ignores the alternative function).
 
         Args:
@@ -334,7 +326,7 @@ class Some(Option[TOption]):
         """
         return self
 
-    def inspect(self, fn: Callable[[TOption], None]) -> Option[TOption]:
+    def inspect(self, fn: Callable[[T], None]) -> Option[T]:
         """Inspect the contained value.
 
         Args:
@@ -346,7 +338,7 @@ class Some(Option[TOption]):
         fn(self._value)
         return self
 
-    def is_some_and(self, fn: Callable[[TOption], bool]) -> bool:
+    def is_some_and(self, fn: Callable[[T], bool]) -> bool:
         """Check if the value satisfies the predicate.
 
         Args:
@@ -357,7 +349,7 @@ class Some(Option[TOption]):
         """
         return fn(self._value)
 
-    def ok_or(self, err: EOption) -> Result[TOption, EOption]:
+    def ok_or(self, err: E) -> Result[T, E]:
         """Convert to Result::Ok.
 
         Args:
@@ -368,7 +360,7 @@ class Some(Option[TOption]):
         """
         return Ok(self._value)
 
-    def filter(self, fn: Callable[[TOption], bool]) -> Option[TOption]:
+    def filter(self, fn: Callable[[T], bool]) -> Option[T]:
         """Keep the value only if it satisfies the predicate.
 
         Args:
@@ -381,7 +373,7 @@ class Some(Option[TOption]):
             return self
         return Nothing()
 
-    def and_then(self, fn: Callable[[TOption], Option[U]]) -> Option[U]:
+    def and_then(self, fn: Callable[[T], Option[U]]) -> Option[U]:
         """Apply fn to the contained value and return the result.
 
         Args:
@@ -400,18 +392,18 @@ class Some(Option[TOption]):
             )
         return result
 
-    def flatmap(self, fn: Callable[[TOption], Monad[UOption]]) -> Monad[UOption]:
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Apply fn to the contained value and return the result.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UOption].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn(value).
         """
         return fn(self._value)
 
-    def map(self, fn: Callable[[TOption], UOption]) -> Monad[UOption]:
+    def map(self, fn: Callable[[T], U]) -> Monad[U]:
         """Apply fn to the contained value and return Some with the result.
 
         Args:
@@ -459,11 +451,95 @@ class Some(Option[TOption]):
             return self._value == other._value
         return False
 
-    def __rshift__(self, fn: Callable[[TOption], Monad[UOption]]) -> Monad[UOption]:
+    def __lt__(self, other: object) -> bool:
+        """Less than comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Nothing (Some > Nothing),
+            True if other is Some and self._value < other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Nothing):
+            return False  # Some > Nothing
+        if isinstance(other, Some):
+            return self._value < other._value
+        raise TypeError(
+            f"'<' not supported between instances of 'Some' and '{type(other).__name__}'"
+        )
+
+    def __le__(self, other: object) -> bool:
+        """Less than or equal comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Nothing (Some > Nothing),
+            True if other is Some and self._value <= other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Nothing):
+            return False  # Some > Nothing
+        if isinstance(other, Some):
+            return self._value <= other._value
+        raise TypeError(
+            f"'<=' not supported between instances of 'Some' and '{type(other).__name__}'"
+        )
+
+    def __gt__(self, other: object) -> bool:
+        """Greater than comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Nothing (Some > Nothing),
+            True if other is Some and self._value > other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Nothing):
+            return True  # Some > Nothing
+        if isinstance(other, Some):
+            return self._value > other._value
+        raise TypeError(
+            f"'>' not supported between instances of 'Some' and '{type(other).__name__}'"
+        )
+
+    def __ge__(self, other: object) -> bool:
+        """Greater than or equal comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Nothing (Some > Nothing),
+            True if other is Some and self._value >= other._value,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Nothing):
+            return True  # Some > Nothing
+        if isinstance(other, Some):
+            return self._value >= other._value
+        raise TypeError(
+            f"'>=' not supported between instances of 'Some' and '{type(other).__name__}'"
+        )
+
+    def __hash__(self) -> int:
+        """Return a hash value for the Some.
+
+        Returns:
+            Hash value based on the wrapped value.
+        """
+        return hash(self._value)
+
+    def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[U]:
         """Apply fn to the contained value and return the result.
 
         Args:
-            fn: A callable that takes the value and returns Monad[UOption].
+            fn: A callable that takes the value and returns Monad[U].
 
         Returns:
             The result of fn(value).
@@ -478,7 +554,7 @@ class Some(Option[TOption]):
         """
         return f"Option::Some({self._value!r})"
 
-    def __copy__(self) -> "Some[TOption]":
+    def __copy__(self) -> "Some[T]":
         """Create a shallow copy of Some.
 
         Returns:
@@ -486,7 +562,7 @@ class Some(Option[TOption]):
         """
         return Some(copy.copy(self._value))
 
-    def __deepcopy__(self, memo: dict) -> "Some[TOption]":
+    def __deepcopy__(self, memo: dict) -> "Some[T]":
         """Create a deep copy of Some.
 
         Args:
@@ -560,7 +636,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         raise UnwrapOptionError()
 
-    def unwrap_or(self, default: TOption) -> TOption:
+    def unwrap_or(self, default: T) -> T:
         """Return the default value.
 
         Args:
@@ -571,7 +647,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return default
 
-    def and_then(self, fn: Callable[[Any], Option[UOption]]) -> Option[Any]:
+    def and_then(self, fn: Callable[[Any], Option[U]]) -> Option[Any]:
         """Return Nothing without calling the function.
 
         Args:
@@ -582,7 +658,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return self
 
-    def or_else(self, fn: Callable[[], Option[UOption]]) -> Option[UOption]:
+    def or_else(self, fn: Callable[[], Option[U]]) -> Option[U]:
         """Call the alternative function and return its result.
 
         Args:
@@ -593,7 +669,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return fn()
 
-    def inspect(self, fn: Callable[[TOption], None]) -> Option[TOption]:
+    def inspect(self, fn: Callable[[T], None]) -> Option[T]:
         """Do nothing (the function is not called).
 
         Args:
@@ -604,7 +680,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return self
 
-    def is_some_and(self, fn: Callable[[TOption], bool]) -> bool:
+    def is_some_and(self, fn: Callable[[T], bool]) -> bool:
         """Return False (Nothing never satisfies a predicate).
 
         Args:
@@ -615,7 +691,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return False
 
-    def ok_or(self, err: EOption) -> Result[TOption, EOption]:
+    def ok_or(self, err: E) -> Result[T, E]:
         """Convert to Result::Err.
 
         Args:
@@ -626,7 +702,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return Err(err)
 
-    def filter(self, fn: Callable[[TOption], bool]) -> Option[TOption]:
+    def filter(self, fn: Callable[[T], bool]) -> Option[T]:
         """Return Nothing (Nothing never passes a filter).
 
         Args:
@@ -637,7 +713,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return self
 
-    def map(self, fn: Callable[[TOption], UOption]) -> Monad[Any]:
+    def map(self, fn: Callable[[T], U]) -> Monad[Any]:
         """Return Nothing without calling the function.
 
         Args:
@@ -648,7 +724,7 @@ class Nothing(Option[Any], metaclass=NothingMeta):
         """
         return self
 
-    def flatmap(self, fn: Callable[[TOption], Monad[UOption]]) -> Monad[Any]:
+    def flatmap(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         """Return Nothing without calling the function.
 
         Args:
@@ -696,7 +772,91 @@ class Nothing(Option[Any], metaclass=NothingMeta):
             return True
         return False
 
-    def __rshift__(self, fn: Callable[[TOption], Monad[UOption]]) -> Monad[Any]:
+    def __lt__(self, other: object) -> bool:
+        """Less than comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Some (Nothing < Some),
+            False if other is Nothing,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Some):
+            return True  # Nothing < Some
+        if isinstance(other, Nothing):
+            return False  # Nothing == Nothing
+        raise TypeError(
+            f"'<' not supported between instances of 'Nothing' and '{type(other).__name__}'"
+        )
+
+    def __le__(self, other: object) -> bool:
+        """Less than or equal comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            True if other is Some (Nothing < Some),
+            True if other is Nothing (Nothing == Nothing),
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Some):
+            return True  # Nothing < Some
+        if isinstance(other, Nothing):
+            return True  # Nothing == Nothing
+        raise TypeError(
+            f"'<=' not supported between instances of 'Nothing' and '{type(other).__name__}'"
+        )
+
+    def __gt__(self, other: object) -> bool:
+        """Greater than comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            False if other is Some (Nothing < Some),
+            False if other is Nothing,
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Some):
+            return False  # Nothing < Some
+        if isinstance(other, Nothing):
+            return False  # Nothing == Nothing
+        raise TypeError(
+            f"'>' not supported between instances of 'Nothing' and '{type(other).__name__}'"
+        )
+
+    def __ge__(self, other: object) -> bool:
+        """Greater than or equal comparison for Option.
+
+        Args:
+            other: The object to compare.
+
+        Returns:
+            False if other is Some (Nothing < Some),
+            True if other is Nothing (Nothing == Nothing),
+            TypeError if types are incompatible.
+        """
+        if isinstance(other, Some):
+            return False  # Nothing < Some
+        if isinstance(other, Nothing):
+            return True  # Nothing == Nothing
+        raise TypeError(
+            f"'>=' not supported between instances of 'Nothing' and '{type(other).__name__}'"
+        )
+
+    def __hash__(self) -> int:
+        """Return a hash value for the Nothing.
+
+        Returns:
+            hash(None) - same as hashing None.
+        """
+        return hash(None)
+
+    def __rshift__(self, fn: Callable[[T], Monad[U]]) -> Monad[Any]:
         """Return Nothing without calling the function.
 
         Args:
