@@ -35,9 +35,10 @@
 ## 阶段性工作清单
 每个阶段完成后必须完成：
 - [x] 测试验证 - Some.and_then 修复已包含测试
-- [x] 代码审查 - PR 已创建，等待审核 https://github.com/AkiSun/rustymonad/compare/main...feature/rustymonad-optimizations?expand=1
+- [x] 代码审查 - PR 已创建，等待审核 https://github.com/AkiSun/rustymonad/pull/2
 - [x] 文档完善 - README.md、CONTRIBUTING.md、CHANGELOG.md 已更新
 - [x] 远程推送 - 推送到远程仓库 (完成日期: 2026-02-12)
+- [x] PR 创建 - PR #2 已创建 (完成日期: 2026-02-12)
 
 ---
 
@@ -97,4 +98,5 @@
 - [x] 代码审查 - 审核通过
 - [x] README.md 更新 - 添加 __hash__ 和比较运算说明
 - [x] 测试用例修复 - 将 NotImplemented 预期改为 TypeError
-- [ ] 远程推送 - 推送到远程仓库
+- [x] 远程推送 - 推送到远程仓库 (完成日期: 2026-02-12)
+- [x] PR 创建 - PR #2 已创建 (完成日期: 2026-02-12)
