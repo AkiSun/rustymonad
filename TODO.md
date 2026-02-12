@@ -37,7 +37,7 @@
 - [x] 测试验证 - Some.and_then 修复已包含测试
 - [x] 代码审查 - PR 已创建，等待审核 https://github.com/AkiSun/rustymonad/compare/main...feature/rustymonad-optimizations?expand=1
 - [x] 文档完善 - README.md、CONTRIBUTING.md、CHANGELOG.md 已更新
-- [ ] 远程推送 - PR 审核通过后执行
+- [x] 远程推送 - 推送到远程仓库 (完成日期: 2026-02-12)
 
 ---
 
